@@ -1,0 +1,173 @@
+// The program calculates the number of each item at two different stores
+// Merge Sorted Files Capstone 
+// Programmer: Khelan Modi
+// Date Modified: April 30th, 2019. 
+
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <string>
+using namespace std;
+
+//Function Prototype
+void printBanner(ostream &output = cout);        // done
+string getConnectedFiletoStream(ifstream &inputFile);   // done    
+string getConnectedFiletoStream(ofstream &output);      // done -- same function name - function overloading
+void printMergeData(ifstream &file1, ifstream &file2, ostream &mergeFile = cout);  // done
+
+int main()   // done
+{
+	system("color 3f");
+	system("title Merge Sorted Files Capstone by K. Modi");
+
+	ifstream inputFile1, inputFile2;
+	string file1, filename, file2;
+	ofstream outputFile;
+
+	printBanner(); //prints on the monitor
+
+	cout << "Please the file that contains the inventory information for \n"
+		<< "\t Store #1: ";
+	file1 = getConnectedFiletoStream(inputFile1); // validation function to get the first file name from the user
+
+	cout << "Please the file that contains the inventory information for \n"
+		<< "\t Store #2: ";
+	file2 = getConnectedFiletoStream(inputFile2); // validation function to get the second file name from the user
+
+	cout << "\nPlease provide the file that you want the MERGED data to go to: ";
+	filename = getConnectedFiletoStream(outputFile); // validation function that gets a valid output file name
+
+	cout << "\n\nYou can find the information from files \"" << file1 << "\" and \"" << file2 << "\""
+		<< "\nin the file \"" << filename << "\".\n\n";
+
+	printMergeData(inputFile1, inputFile2); // prints the merged data on the monitor
+
+	inputFile2.close();
+	inputFile1.close();
+
+	// opening again to print data to a file
+	inputFile2.open(file2);
+	inputFile1.open(file1);
+
+	printBanner(outputFile); //printing to a file
+
+	printMergeData(inputFile1, inputFile2, outputFile); // prints the merged contents to a file
+
+	inputFile2.close();
+	inputFile1.close();
+	
+	cout << endl;
+
+	system("pause");
+	return 0;
+}
+
+// Function that prints the banner to a file as well as on the monitor
+void printBanner(ostream &output)  // done
+{
+	output
+		<< "\n\t\t                   Capstone                    "
+		<< "\n\t\t   Merge to shorted files into a third file    "
+		<< "\n\t\t            Keep the items shorted             "
+		<< "\n\t\t                  by K. Modi               \n\n";
+}
+
+// Input Validation Function that gets the valid from the user and returns it to the main
+string getConnectedFiletoStream(ifstream &inputFile) {    // done
+	// better name for the fuction to iditacare what the validation loop validates for
+	string fileName;
+
+	getline(cin >> ws, fileName);
+	inputFile.open(fileName);
+
+	while (inputFile.fail()) {
+		system("color 0f");
+		cout
+			<< "\a\t Failed to open \"" << fileName << "\" for the Reading the data. \n"
+			<< "\tPlease make sure the file is located in the appropriate folder and \n"
+			<< "\tit is not misspelled.\n"
+			<< "\tDon't forget to include the filename extension: ";
+		getline(cin >> ws, fileName);
+		inputFile.open(fileName);
+	}
+	system("color 3f");
+	return fileName;
+}
+
+// the funciton that prints the data after taking data from both the files.
+// it prints the data on the monitor as well as in a file.
+void printMergeData(ifstream &file1, ifstream &file2, ostream &output)  // done
+{
+	string fileID1, fileID2, description1, description2;
+	int  quantity1, quantity2;
+
+	// to eliminate the header of the file - if you don't need that use the ignore
+	file1.ignore(999, '\n');
+	file2.ignore(999, '\n');
+	
+	file1 >> fileID1 >> quantity1;
+	getline(file1 >> ws, description1);
+
+	file2 >> fileID2 >> quantity2;
+	getline(file2 >> ws, description2);
+
+	while (!file1.fail() && !file2.fail()) {
+		if (fileID1 > fileID2) { // if the item is not found in store 1
+			output << setw(9) << left << fileID2 << "\t\t" << quantity2 << "\t\t ( NA + " << quantity2 << " )\t\t"
+				<< setw(9) << left << description2 << endl;
+
+			file2 >> fileID2 >> quantity2;
+			getline(file2 >> ws, description2);
+		}
+		if (fileID1 < fileID2) { // if the item is not found in store 2
+			output << setw(9) << left << fileID1 << "\t\t" << quantity1 << "\t\t ( " << quantity1 << " + NA )\t\t"
+				<< setw(9) << left << description1 << endl;
+
+			file1 >> fileID1 >> quantity1;
+			getline(file1 >> ws, description1);
+		}
+		if (fileID1 == fileID2) { // if the item is present at both stores
+			output << setw(9) << left << fileID1 << "\t\t" << quantity1 + quantity2 << "\t\t" << " ( " << quantity1 << " + " << quantity2 << " )\t\t"
+				<< setw(9) << left << description1 << endl;
+
+			file1 >> fileID1 >> quantity1;
+			getline(file1 >> ws, description1);
+			file2 >> fileID2 >> quantity2;
+			getline(file2 >> ws, description2);
+		}
+	}
+
+	while (!file1.fail()) { // Again reads data from the file if the data in the second file ends
+		output << setw(9) << left << fileID1 << "\t\t" << quantity1 << "\t\t ( " << quantity1 << " + NA ) \t\t"
+			<< setw(9) << left << description1 << endl;
+		file1 >> fileID1 >> quantity1;
+		getline(file1 >> ws, description1);
+	}
+
+	while (!file2.fail()) { // reads data only from the second file, if the data from the first file ends
+		output << setw(9) << left << fileID2 << "\t\t" << quantity2 << "\t\t ( NA + " << quantity2 << " )\t\t "
+			<< setw(9) << left << description2 << endl;
+		file2 >> fileID2 >> quantity2;
+		getline(file2 >> ws, description2);
+	}
+}
+
+// input validation function that valids the file name entered by the user
+string getConnectedFiletoStream(ofstream &output) {    // function name
+	string fileName;
+
+	getline(cin >> ws, fileName);
+	output.open(fileName);
+
+	while (output.fail()) {
+		system("color 0f");
+		cout << "\a\tFailed to open \"" << fileName << "\" for WRITING the data.\n"
+			<< "\tPlease make sure the file filename does not contain illegal characters\n"
+			<< "\tand it not currently used by another appliation.\n"
+			<< "\tDon't forget to include the filename extension:\n\n";
+		getline(cin >> ws, fileName);
+		output.open(fileName);
+	}
+	system("color 3f");
+	return fileName;
+}
